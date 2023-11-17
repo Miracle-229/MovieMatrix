@@ -1,20 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import logo from '../../Img/logo_transparent.png';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserAuth } from '../../Context/AuthContext';
-import { useState } from 'react';
 
 const SignUP = () => {
+  const [login, setLogin] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const {signUp } = UserAuth();
+  const { signUp } = UserAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signUp(email, password);
+      await signUp(login, email, password);
       navigate('/');
     } catch (error) {
       console.log(error);
@@ -29,6 +29,14 @@ const SignUP = () => {
         </p>
         <img style={{ height: '100px' }} src={logo} alt="logo" />
         <Form onSubmit={handleSubmit} className="w-50">
+          <Form.Group>
+            <Form.Label>Логин</Form.Label>
+            <Form.Control
+              onChange={(e) => setLogin(e.target.value)}
+              type="text"
+              placeholder="Введите логин"
+            />
+          </Form.Group>
           <Form.Group>
             <Form.Label>Почта</Form.Label>
             <Form.Control

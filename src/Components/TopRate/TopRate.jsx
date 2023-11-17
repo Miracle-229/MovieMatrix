@@ -124,6 +124,7 @@ const TopRate = (props) => {
       if (bottomPosition >= document.documentElement.scrollHeight) {
         setNumMovies(numMovies + 4);
         setPage(page + 1);
+        console.log(true)
       }
       if (scrollPosition > 2500) {
         setShowScrollButton(true);

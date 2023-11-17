@@ -15,7 +15,7 @@ const SignIn = () => {
     e.preventDefault();
     try {
       await logIn(email, password);
-      navigate('/account');
+      navigate('/');
     } catch (error) {
       console.log(error);
     }

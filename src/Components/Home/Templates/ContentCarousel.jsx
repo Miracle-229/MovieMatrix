@@ -15,7 +15,7 @@ const ContentCarousel = ({ result }) => {
   const movies = nowPlaying.slice(0, 5).map((item, index) => {
     return (
       <Carousel.Item>
-        <div style={{ height: "80vh", width: '100%' }} key={index}>
+        <div style={{ height: "80vh", width: '100%' }} >
           <div
             className="carousel-center"
             style={{
