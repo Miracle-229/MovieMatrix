@@ -1,41 +1,41 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../API/Firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
 export function AuthContextProvider({ children }) {
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
 
-  async function signUp(email, password) {
-    await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, 'users', email), {
-      savedShows: [],
+  async function signUp(login, email, password) {
+    const response = await axios.post('http://localhost:8080/api/auth/signup', {
+      login,
+      email,
+      password,
     });
+    setUser(response.data.user);
   }
 
-  function logIn(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
-  }
-
-  function logOut() {
-    return signOut(auth);
-  }
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+  async function logIn(email, password) {
+    const response = await axios.post('http://localhost:8080/api/auth/login', {
+      email,
+      password,
     });
-    return () => {
-      unsubscribe();
-    };
-  });
+    setUser(response.data.user);
+  }
+
+  async function logOut() {
+    await axios.post('http://localhost:8080/api/auth/logout');
+    setUser(null);
+  }
+
+  // useEffect(() => {
+  //   const checkUser = async () => {
+  //     const response = await axios.get('localhost:8080/api/auth/user');
+  //     setUser(response.data.user);
+  //   };
+
+  //   checkUser();
+  // }, []);
 
   return (
     <AuthContext.Provider value={{ signUp, logIn, logOut, user }}>
