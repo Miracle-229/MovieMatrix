@@ -57,15 +57,34 @@ export const fetchMovieByGenre = async (
 ) => {
   const with_genres = selectedGenres.join(',');
 
-  if (with_genres) {
-    return fetchMoviesByEndpoint('id', 'results', `${result}/top_rated`, {
-      with_genres,
-      page,
-    });
-  } else {
-    return fetchMoviesByEndpoint('id', 'results', `${result}/top_rated`, {
-      page,
-    });
+  try {
+    if (with_genres) {
+      return await fetchMoviesByEndpoint(
+        'id',
+        'results',
+        `discover/${result}`,
+        {
+          with_genres,
+          page,
+          sort_by: 'vote_average.desc',
+          'vote_count.gte':'400'
+        }
+      );
+    } else {
+      return await fetchMoviesByEndpoint(
+        'id',
+        'results',
+        `discover/${result}`,
+        {
+          page,
+          sort_by: 'vote_average.desc',
+          'vote_count.gte':'400'
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Error fetching movie by genre:', error);
+    throw error; // Если вы хотите пробросить ошибку дальше
   }
 };
 
@@ -143,4 +162,36 @@ export const loadOptions = async (query, setOptions) => {
     type: result.media_type,
   }));
   setOptions(newOptions);
+};
+
+const sortMoviesBySelectedGenres = async (result, selectedGenres) => {
+  try {
+    const { data } = await axios.get(`${API_URL}/discover/${result}`, {
+      params: {
+        api_key: API_KEY,
+        language: LANGUAGE,
+        with_genres: selectedGenres.join(','),
+      },
+    });
+    const modifiedData = data.results.map((item) => ({
+      id: item.id,
+      backPoster: item['backdrop_path']
+        ? POSTER_URL + item['backdrop_path']
+        : img,
+      popularity: item['popularity'],
+      title: item['title'],
+      poster: item['poster_path'] ? POSTER_URL + item['poster_path'] : img,
+      overview: item['overview'],
+      rating: item['vote_average'],
+      name: item['name'],
+      profileImg: item['profile_path']
+        ? PROFILE_IMG_URL + item['profile_path']
+        : img,
+      know: item['known_for_department'],
+    }));
+    return modifiedData;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
