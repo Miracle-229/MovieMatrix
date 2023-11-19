@@ -22,6 +22,7 @@ const MoviePlayerMedia = (props) => {
     fetchApi();
   }, [result, params.id]);
 
+
   const MoviePlayerMedia = (props) => {
     let tvURL = 'https://www.youtube.com/watch?v=';
     if (result === 'tv' && detail.id === 1396) {
@@ -52,6 +53,8 @@ const MoviePlayerMedia = (props) => {
     else if (result === 'tv' && detail.id === 30984) {
       tvURL = 'https://www.youtube.com/watch?v=Z3lO6d4aZmM';
     }
+
+
 
     return (
       <Modal
@@ -115,8 +118,8 @@ const MoviePlayerMedia = (props) => {
               opacity: '1',
             }}
             src={
-              detail.backdrop_path
-                ? `https://image.tmdb.org/t/p/original/${detail.backdrop_path}`
+              detail.backPoster
+                ? `https://image.tmdb.org/t/p/original${detail.backPoster}`
                 : img
             }
             alt={detail.title}

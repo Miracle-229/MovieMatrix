@@ -11,6 +11,7 @@ import TopRate from './Components/TopRate/TopRate';
 import Account from './Components/Auth/Account';
 
 function App() {
+  
   return (
     <AuthContextProvider>
       <BrowserRouter>

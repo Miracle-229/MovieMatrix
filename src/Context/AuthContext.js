@@ -7,38 +7,54 @@ export function AuthContextProvider({ children }) {
   const [user, setUser] = useState(null);
 
   async function signUp(login, email, password) {
-    const response = await axios.post('http://localhost:8080/api/auth/signup', {
-      login,
-      email,
-      password,
-    });
-    setUser(response.data.user);
+    try {
+      const response = await axios.post(
+        'http://localhost:8080/api/auth/signup',
+        {
+          login,
+          email,
+          password,
+        }
+      );
+      setUser(JSON.parse(response.config.data));
+    } catch (error) {
+      console.error('Error during sign up:', error);
+      // You can also handle the error in a way that suits your application
+    }
   }
 
-  async function logIn(email, password) {
-    const response = await axios.post('http://localhost:8080/api/auth/login', {
-      email,
-      password,
-    });
-    setUser(response.data.user);
+  async function signIn(login, password) {
+    try {
+      const response = await axios.post(
+        'http://localhost:8080/api/auth/login',
+        {
+          login,
+          password,
+        }
+      );
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      console.log(response);
+      setUser(response);
+    } catch (error) {
+      console.error('Error during sign in:', error);
+      // You can also handle the error in a way that suits your application
+    }
   }
 
   async function logOut() {
-    await axios.post('http://localhost:8080/api/auth/logout');
-    setUser(null);
+    try {
+      await axios.post('http://localhost:8080/api/auth/logout');
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // You can also handle the error in a way that suits your application
+    }
   }
 
-  // useEffect(() => {
-  //   const checkUser = async () => {
-  //     const response = await axios.get('localhost:8080/api/auth/user');
-  //     setUser(response.data.user);
-  //   };
-
-  //   checkUser();
-  // }, []);
 
   return (
-    <AuthContext.Provider value={{ signUp, logIn, logOut, user }}>
+    <AuthContext.Provider value={{ signUp, signIn, logOut, user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import logo from '../../Img/logo_transparent.png';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -6,20 +6,23 @@ import { useState } from 'react';
 import { UserAuth } from '../../Context/AuthContext';
 
 const SignIn = () => {
-  const [email, setEmail] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const { logIn } = UserAuth();
+  const { signIn } = UserAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await logIn(email, password);
-      navigate('/');
+      await signIn(login, password);
+      navigate('/tv_rate');
     } catch (error) {
       console.log(error);
     }
   };
+
+
+
   return (
     <div className="container">
       <div className="d-flex flex-column justify-content-center align-items-center vh-100">
@@ -29,11 +32,11 @@ const SignIn = () => {
         <img style={{ height: '100px' }} src={logo} alt="logo" />
         <Form onSubmit={handleSubmit} className="w-50">
           <Form.Group controlId="formBasicEmail">
-            <Form.Label>Почта</Form.Label>
+            <Form.Label>Логин</Form.Label>
             <Form.Control
-              type="email"
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Введите почту"
+              type="login"
+              onChange={(e) => setLogin(e.target.value)}
+              placeholder="Введите логин"
             />
           </Form.Group>
           <Form.Group controlId="formBasicPassword">

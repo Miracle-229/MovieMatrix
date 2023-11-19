@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import logo from '../../Img/logo_transparent.png';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -8,18 +8,21 @@ const SignUP = () => {
   const [login, setLogin] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signUp } = UserAuth();
+  const { signUp, user } = UserAuth();
   const navigate = useNavigate();
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await signUp(login, email, password);
-      navigate('/');
+      navigate('/movie_rate');
     } catch (error) {
       console.log(error);
     }
   };
+
+  console.log(user)
 
   return (
     <div className="container">

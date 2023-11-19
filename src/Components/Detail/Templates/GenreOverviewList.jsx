@@ -152,16 +152,16 @@ const GenreOverviewList = (props) => {
               <p
                 style={{
                   backgroundColor:
-                    detail.vote_average < 4
+                    detail.rating < 4
                       ? 'black'
-                      : detail.vote_average < 7
+                      : detail.rating < 7
                       ? '#2A2A2A'
                       : '#625FC9',
                   padding: '3px 5px',
                   display: 'inline-block',
                 }}
               >
-                {detail.vote_average ? detail.vote_average.toFixed(2) : 'N/A'}
+                {detail.rating ? detail.rating.toFixed(2) : 'N/A'}
               </p>
             </div>
           </div>

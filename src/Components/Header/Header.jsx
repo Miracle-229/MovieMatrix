@@ -129,7 +129,7 @@ const Header = () => {
             </NavLink>
           </NavDropdown.Item>
         </NavDropdown>
-        {user?.email ? (
+        {user ? (
           <NavDropdown
             title={<BiUser size={30} />}
             id="navbarScrollingDropdown"

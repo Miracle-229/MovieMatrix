@@ -89,7 +89,7 @@ const Account = (props) => {
       <Header />
       <div style={{ backgroundImage: `url(${back})` }}>
         <div className="container">
-          <p className="text-center">{user.email}</p>
+          <p className="text-center">{user.login}</p>
           <div className="row mt-3">{movieList}</div>
         </div>
       </div>
