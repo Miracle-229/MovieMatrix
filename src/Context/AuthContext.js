@@ -4,7 +4,7 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export function AuthContextProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
 
   async function signUp(login, email, password) {
     try {
@@ -16,17 +16,17 @@ export function AuthContextProvider({ children }) {
           password,
         }
       );
-      setUser(JSON.parse(response.config.data));
+      localStorage.setItem('user', response.config.data);
+      console.log(response);
     } catch (error) {
       console.error('Error during sign up:', error);
-      // You can also handle the error in a way that suits your application
     }
   }
 
   async function signIn(login, password) {
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/auth/login',
+        `http://localhost:8080/api/auth/login`,
         {
           login,
           password,
@@ -34,8 +34,8 @@ export function AuthContextProvider({ children }) {
       );
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', response.config.data);
       console.log(response);
-      setUser(response);
     } catch (error) {
       console.error('Error during sign in:', error);
       // You can also handle the error in a way that suits your application
@@ -45,16 +45,16 @@ export function AuthContextProvider({ children }) {
   async function logOut() {
     try {
       await axios.post('http://localhost:8080/api/auth/logout');
-      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     } catch (error) {
       console.error('Error during logout:', error);
-      // You can also handle the error in a way that suits your application
     }
   }
 
-
   return (
-    <AuthContext.Provider value={{ signUp, signIn, logOut, user }}>
+    <AuthContext.Provider value={{ signUp, signIn, logOut }}>
       {children}
     </AuthContext.Provider>
   );

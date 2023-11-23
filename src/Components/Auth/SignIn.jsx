@@ -15,7 +15,7 @@ const SignIn = () => {
     e.preventDefault();
     try {
       await signIn(login, password);
-      navigate('/tv_rate');
+      navigate('/movie_rate');
     } catch (error) {
       console.log(error);
     }

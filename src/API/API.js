@@ -41,70 +41,120 @@ const fetchMoviesByEndpoint = async (id, results, endpoint, params) => {
   }
 };
 
-export const fetchMovies = async (result) => {
-  return fetchMoviesByEndpoint('id', 'results', `${result}`, {
-    with_original_language: 'en',
-  });
-};
-
-export const fetchGenre = async (result) => {
-  return fetchMoviesByEndpoint('id', 'genres', `genre/${result}/list`);
-};
-
-export const fetchMovieByGenre = async (
-  result,
-  selectedGenres = [],
-  page = 1
-) => {
-  const with_genres = selectedGenres.join(',');
-
+export const fetchMovies = async (id, results, endpoint, params) => {
   try {
-    if (with_genres) {
-      return await fetchMoviesByEndpoint(
-        'id',
-        'results',
-        `discover/${result}`,
-        {
-          with_genres,
-          page,
-          sort_by: 'vote_average.desc',
-          'vote_count.gte': '400',
-        }
-      );
-    } else {
-      return await fetchMoviesByEndpoint(
-        'id',
-        'results',
-        `discover/${result}`,
-        {
-          page,
-          sort_by: 'vote_average.desc',
-          'vote_count.gte': '400',
-        }
-      );
-    }
+    const { data } = await axios.get(`http://localhost:8080/api/movie`, {
+      params: {
+        size: 5,
+        page: 0,
+        sort: 'popularity,desc',
+      },
+    });
+    const modifiedData = data.content.map((item) => ({
+      id: item.id,
+      backPoster: item.backdropPath ? POSTER_URL + item.backdropPath : img,
+      popularity: item.popularity,
+      title: item.title,
+      poster: item.posterPath ? POSTER_URL + item.posterPath : img,
+      overview: item.overview,
+      rating: item.voteAverage,
+      name: item.name,
+      profileImg: item.profile_path ? PROFILE_IMG_URL + item.profile_path : img,
+      know: item.known_for_department,
+      character: item.character,
+    }));
+    return modifiedData;
   } catch (error) {
-    console.error('Error fetching movie by genre:', error);
-    throw error; // Если вы хотите пробросить ошибку дальше
+    console.error(error);
+    return [];
+  }
+};
+
+export const fetchGenre = async (id, results, endpoint, params) => {
+  try {
+    const { data } = await axios.get(`http://localhost:8080/api/genre`);
+    localStorage.setItem(
+      'genres',
+      data.map((item) => item.genreId)
+    );
+    const modifiedData = data.map((item) => ({
+      id: item.genreId,
+      name: item.name,
+    }));
+    return modifiedData;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+export const fetchMovieByGenre = async (selectedGenres=[], page = 0) => {
+  try {
+    const with_genres = selectedGenres.join(',');
+    const { data } = await axios.get(
+      `http://localhost:8080/api/movie/by/genre`,
+      {
+        params: {
+          size: 8,
+          page: page,
+          sort: 'popularity,desc',
+          genres: with_genres ? with_genres : localStorage.getItem('genres'),
+        },
+      }
+    );
+    const modifiedData = data.content.map((item) => ({
+      id: item.id,
+      backPoster: item.backdropPath ? POSTER_URL + item.backdropPath : img,
+      popularity: item.popularity,
+      title: item.title,
+      poster: item.posterPath ? POSTER_URL + item.posterPath : img,
+      overview: item.overview,
+      rating: item.voteAverage,
+      name: item.name,
+      profileImg: item.profile_path ? PROFILE_IMG_URL + item.profile_path : img,
+      know: item.known_for_department,
+      character: item.character,
+    }));
+    return modifiedData;
+  } catch (error) {
+    console.error(error);
+    return [];
   }
 };
 
 export const fetchPersons = async () => {
-  return fetchMoviesByEndpoint('id', 'results', 'trending/person/week');
+  try {
+    const { data } = await axios.get(`http://localhost:8080/api/person`);
+    const modifiedData = data.content.map((item) => ({
+      id: item.id,
+      backPoster: item.backdropPath ? POSTER_URL + item.backdropPath : img,
+      popularity: item.popularity,
+      title: item.title,
+      poster: item.posterPath ? POSTER_URL + item.posterPath : img,
+      overview: item.overview,
+      rating: item.voteAverage,
+      name: item.name,
+      profileImg: item.profilePath ? PROFILE_IMG_URL + item.profilePath : img,
+      know: item.known_for_department,
+      character: item.character,
+    }));
+    return modifiedData;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
 
 export const fetchTopRatedMovie = async (id, results, endpoint, params) => {
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/api/movie/popular`,
-      {
-        params: {
-          size: 10,
-          ...params,
-        },
-      }
-    );
-    const modifiedData = data.map((item) => ({
+    const { data } = await axios.get(`http://localhost:8080/api/movie`, {
+      params: {
+        size: 5,
+        page: 0,
+        sort: 'voteAverage,desc',
+      },
+    });
+    const modifiedData = data.content.map((item) => ({
       id: item.id,
       backPoster: item.backdrop_path ? POSTER_URL + item.backdrop_path : img,
       popularity: item.popularity,
@@ -154,7 +204,7 @@ const fetchDataDetail = async (movieId, params) => {
       profileImg: data.profilePath ? PROFILE_IMG_URL + data.profilePath : img,
       know: data.known_for_department,
       character: data.character,
-      genres:data.genres
+      genres: data.genres,
     };
     return modifiedData;
   } catch (error) {
@@ -180,14 +230,11 @@ export const loadOptions = async (query, setOptions) => {
     return;
   }
 
-  const { data } = await axios.get(
-    'http://localhost:8080/api/movie/search/' + query,
-    {
-      params: {
-        query: query,
-      },
-    }
-  );
+  const { data } = await axios.get('http://localhost:8080/api/movie/search', {
+    params: {
+      search: query,
+    },
+  });
 
   const newOptions = data.map((result) => ({
     value: result.id,

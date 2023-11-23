@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { fetchGenre, fetchMovieByGenre } from '../../API/API.js';
 import style from './Style.module.scss';
@@ -7,79 +7,103 @@ import Header from '../Header/Header.jsx';
 import back from '../../Img/back.jpg';
 import { AiOutlineArrowUp } from 'react-icons/ai';
 import { UserAuth } from '../../Context/AuthContext.js';
-import { db } from '../../API/Firebase.js';
-import { arrayUnion, doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import axios from 'axios';
 
 const TopRate = (props) => {
   const { result } = props;
   const [genres, setGenres] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [numMovies, setNumMovies] = useState(8);
-  const [selectedIcon, setSelectedIcon] = useState([]);
-  const [page, setPage] = useState(1);
+  // const [selectedIcon, setSelectedIcon] = useState([]);
+  const [page, setPage] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [movies, setMovies] = useState([]);
   const [savedId, setSavedId] = useState([]);
-  const { user } = UserAuth();
+  const [objectMark, setObjectMark] = useState([]);
+  const access = localStorage.getItem('accessToken');
+  const user = localStorage.getItem('user');
 
-  const movieID = doc(db, 'users', `${user?.email}`);
   const saveShow = async (item) => {
-    if (user?.email) {
-      console.log(item.id, item.title, item.poster);
-      const showsToSave = selectedIcon.includes(item.id)
-        ? selectedIcon.filter((itemId) => itemId !== item.id)
-        : [...selectedIcon, item.id];
-      setSelectedIcon(showsToSave);
-      await updateDoc(movieID, {
-        [result]: arrayUnion({
-          id: item.id,
-          poster: item.poster,
-          title: result === 'movie' ? item.title : item.name,
-        }),
-      });
-    } else {
-      alert('Зайдите пожалуйста для сохранения');
-    }
-  };
-  const deleteShow = async (i) => {
     try {
-      const itemType = i.title ? 'movie' : 'tv';
-      const updatedSavedShows = savedId
-        .filter((itemId) => itemId !== i.id || itemType !== result)
-        .map((itemId) => {
-          const item = movies.find((movie) => movie && movie.id === itemId);
-          if (!item) {
-            return null;
-          }
-          return {
-            id: item.id,
-            poster: item.poster,
-            title: result === 'movie' ? item.title : item.name,
-          };
-        })
-        .filter(Boolean);
-      setSelectedIcon(updatedSavedShows.map((item) => item.id));
-      await updateDoc(movieID, {
-        [result]: updatedSavedShows,
+      await axios.post('http://localhost:8080/api/bookmark', {
+        movieId: item.id,
       });
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
     } catch (error) {
-      console.log(error);
+      console.error('Ошибка:', error);
     }
   };
 
-  useEffect(() => {
-    onSnapshot(doc(db, 'users', `${user?.email}`), (doc) => {
-      const savedShows = doc.data()?.[result];
-      const savedIds = savedShows?.map((show) => show.id);
-      setSavedId(savedIds);
-    });
-  }, [user?.email]);
+  const deleteShow = async (item) => {
+    const bookmarkId = objectMark.find(
+      (obj) => obj.movie.id === item.id
+    )?.bookmarkId;
+    console.log(bookmarkId);
+    try {
+      await axios.delete(`http://localhost:8080/api/bookmark/${bookmarkId}`);
+      // После успешного сохранения, обновляем состояние
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
+    } catch (error) {
+      console.error('Ошибка:', error);
+    }
+  };
 
+  const prevPropsBook = useRef();
   useEffect(() => {
+    if (
+      prevPropsBook.current &&
+      prevPropsBook.current.user?.login === user?.login
+    ) {
+      return;
+    }
+    prevPropsBook.current = { user };
+
+    if (access) {
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+          setObjectMark(response.data);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
+    }
+  }, [user?.email, access]);
+
+  const prevProps = useRef();
+  useEffect(() => {
+    if (prevProps.current && prevProps.current.page === page) {
+      return;
+    }
+    prevProps.current = { page };
+
     const fetchAPI = async () => {
       setGenres(await fetchGenre(result));
-      const data = await fetchMovieByGenre(result, selectedGenres, page);
-      if (page === 1) {
+      console.log('genre');
+      const data = await fetchMovieByGenre(selectedGenres, page);
+      if (page === 0) {
         setMovies(data);
       } else setMovies((movies) => [...movies, ...data]);
     };
@@ -94,7 +118,31 @@ const TopRate = (props) => {
       newSelectedGenres = [...selectedGenres, genre_id];
     }
     setSelectedGenres(newSelectedGenres);
-    setMovies(await fetchMovieByGenre(result, newSelectedGenres));
+    setMovies(await fetchMovieByGenre(newSelectedGenres));
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    function handleScroll() {
+      const scrollPosition = document.documentElement.scrollTop;
+      if (scrollPosition > 2500) {
+        setShowScrollButton(true);
+      } else {
+        setShowScrollButton(false);
+      }
+    }
+    document.addEventListener('scroll', handleScroll);
+    return () => {
+      document.removeEventListener('scroll', handleScroll);
+    };
+  }, [numMovies, page]);
+
+  const scroll = () => {
+    setPage(page + 1);
+    setNumMovies(numMovies + 4);
   };
 
   const genreList = genres.map((item, index) => {
@@ -115,31 +163,6 @@ const TopRate = (props) => {
       </li>
     );
   });
-
-  useEffect(() => {
-    function handleScroll() {
-      const windowHeight = document.documentElement.clientHeight;
-      const scrollPosition = document.documentElement.scrollTop;
-      const bottomPosition = scrollPosition + windowHeight;
-      if (bottomPosition >= document.documentElement.scrollHeight) {
-        setNumMovies(numMovies + 4);
-        setPage(page + 1);
-      }
-      if (scrollPosition > 2500) {
-        setShowScrollButton(true);
-      } else {
-        setShowScrollButton(false);
-      }
-    }
-    document.addEventListener('scroll', handleScroll);
-    return () => {
-      document.removeEventListener('scroll', handleScroll);
-    };
-  }, [numMovies, page]);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const movieList = movies.slice(0, numMovies).map((item, index) => {
     return (
@@ -163,17 +186,9 @@ const TopRate = (props) => {
           className="mt-3"
         >
           <p style={{ fontWeight: 'bolder', marginBottom: '0px' }}>
-            {result === 'tv'
-              ? item.name
-                ? item.name.length > 18
-                  ? `${item.name.slice(0, 17)}...`
-                  : item.name
-                : 'НЕИЗВЕСТНОЕ НАЗВАНИЕ'
-              : item.title
-              ? item.title.length > 18
-                ? `${item.title.slice(0, 17)}...`
-                : item.title
-              : 'НЕИЗВЕСТНОЕ НАЗВАНИЕ'}
+            {item?.title?.length > 18
+              ? `${item.title.slice(0, 17)}...`
+              : item?.title || 'НЕИЗВЕСТНОЕ НАЗВАНИЕ'}
           </p>
           {user ? (
             <div style={{ margin: '0px' }}>
@@ -190,12 +205,7 @@ const TopRate = (props) => {
               )}
             </div>
           ) : (
-            <BsBookmark
-              onClick={() => {
-                alert('Войдите в систему для сохранения ');
-              }}
-              style={{ cursor: 'pointer' }}
-            />
+            <BsBookmark style={{ cursor: 'pointer', display: 'none' }} />
           )}
           <span
             style={{
@@ -243,7 +253,16 @@ const TopRate = (props) => {
               </div>
             </div>
           </div>
-          <div className="row mt-3">{movieList}</div>
+          <div className="row mt-3">
+            <InfiniteScroll
+              dataLength={movies.length}
+              next={() => scroll()}
+              hasMore={true}
+              className="row mt-3"
+            >
+              {movieList}
+            </InfiniteScroll>
+          </div>
         </div>
       </div>
     </div>

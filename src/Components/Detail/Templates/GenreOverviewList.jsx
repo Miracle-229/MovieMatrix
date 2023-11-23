@@ -3,14 +3,7 @@ import { fetchMovieDetail } from '../../../API/API.js';
 import { useMatch } from 'react-router-dom';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
 import { UserAuth } from '../../../Context/AuthContext.js';
-import { db } from '../../../API/Firebase.js';
-import {
-  arrayRemove,
-  arrayUnion,
-  doc,
-  onSnapshot,
-  updateDoc,
-} from 'firebase/firestore';
+import axios from 'axios';
 
 const GenreOverviewList = (props) => {
   const { result } = props;
@@ -20,70 +13,68 @@ const GenreOverviewList = (props) => {
   let date;
   let last_date;
   const [detail, setDetail] = useState([]);
-
+  const [objectMark, setObjectMark] = useState([]);
   const [savedId, setSavedId] = useState([]);
-  const [selectedIcon, setSelectedIcon] = useState([]);
-  const { user } = UserAuth();
+  // const [selectedIcon, setSelectedIcon] = useState([]);
+  const user = localStorage.getItem('user');
+  const access = localStorage.getItem('accessToken')
 
-  const [movies, setMovies] = useState([]);
-  useEffect(() => {
-    onSnapshot(doc(db, 'users', `${user?.email}`), (doc) => {
-      setMovies(doc.data()?.[result]);
-    });
-  }, [user?.email]);
-
-  const movieID = doc(db, 'users', `${user?.email}`);
   const saveShow = async (item) => {
-    if (user?.email) {
-      const showsToSave = selectedIcon.includes(item.id)
-        ? selectedIcon.filter((itemId) => itemId !== item.id)
-        : [...selectedIcon, item.id];
-      setSelectedIcon(showsToSave);
-      await updateDoc(movieID, {
-        [result]: arrayUnion({
-          id: item.id,
-          poster: 'https://image.tmdb.org/t/p/original/' + item.poster_path,
-          title: item.title ? item.title : item.name,
-        }),
-      });
-    } else {
-      alert('Зайдите пожалуйста для сохранения');
-    }
-  };
-
-  const deleteShow = async (i) => {
     try {
-      const itemType = i.title ? 'movie' : 'tv';
-      console.log(itemType, i.title);
-      const updatedSavedShows = savedId
-        .filter((itemId) => itemId !== i.id)
-        .map((itemId) => {
-          const item = movies.find((movie) => movie && movie.id === itemId);
-          if (!item) {
-            return null;
-          }
-          return {
-            id: item.id,
-            poster: 'https://image.tmdb.org/t/p/original/' + item.poster_path,
-            title: item.title ? item.title : item.name,
-          };
-        })
-        .filter(Boolean);
-      setSelectedIcon(updatedSavedShows.map((item) => item.id));
-      await updateDoc(movieID, {
-        [result]: updatedSavedShows,
+      await axios.post('http://localhost:8080/api/bookmark', {
+        movieId: item.id,
       });
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
     } catch (error) {
-      console.log(error);
+      console.error('Ошибка:', error);
     }
   };
 
+  const deleteShow = async (item) => {
+    const bookmarkId = objectMark.find(
+      (obj) => obj.movie.id === item.id
+    )?.bookmarkId;
+    console.log(bookmarkId);
+    try {
+      await axios.delete(`http://localhost:8080/api/bookmark/${bookmarkId}`);
+      // После успешного сохранения, обновляем состояние
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
+    } catch (error) {
+      console.error('Ошибка:', error);
+    }
+  };
   useEffect(() => {
-    onSnapshot(doc(db, 'users', `${user?.email}`), (doc) => {
-      const savedShows = doc.data()?.[result];
-      const savedIds = savedShows?.map((show) => show.id);
-      setSavedId(savedIds);
-    });
+    if (access) {
+      axios
+        .get(`http://localhost:8080/api/bookmark`)
+        .then((response) => {
+          const savedShows = response.data;
+          const savedIds = savedShows?.map((show) => show.movie.id);
+          setSavedId(savedIds);
+          setObjectMark(response.data);
+        })
+        .catch((error) => {
+          console.error('Ошибка:', error);
+        });
+    }
   }, [user?.email]);
 
   genres = detail.genres;
@@ -184,12 +175,7 @@ const GenreOverviewList = (props) => {
                   )}
                 </div>
               ) : (
-                <BsBookmark
-                  onClick={() => {
-                    alert('Войдите в систему для сохранения ');
-                  }}
-                  style={{ cursor: 'pointer' }}
-                />
+                <BsBookmark style={{ display: 'none', cursor: 'pointer' }} />
               )}
             </div>
           </div>

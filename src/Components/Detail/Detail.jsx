@@ -15,7 +15,7 @@ function Detail(props) {
         
         <GenreOverviewList result={result} />
         <CastList result={result} />
-        <SimilarMovieList result={result} />
+        {/* <SimilarMovieList result={result} /> */}
 
         <hr className="mt-5" style={{ borderTop: '1px solid #5a606b' }}></hr>
 

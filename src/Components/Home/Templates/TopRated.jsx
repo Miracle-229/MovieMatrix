@@ -55,7 +55,7 @@ const TopRated = ({result}) => {
               padding: '3px 5px',
             }}
           >
-            {item.rating}
+            {item.rating.toFixed(1)}
           </span>
         </div>
       </div>

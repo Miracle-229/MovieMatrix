@@ -21,12 +21,6 @@ const TrendingPersons = () => {
           alt={item.name}
         />
         <p className="font-weight-bold text-center">{item.name}</p>
-        <p
-          className="font-weight-light text-center"
-          style={{ color: '#5a606b' }}
-        >
-          Trending for {item.know}
-        </p>
       </div>
     );
   });

@@ -2,7 +2,7 @@ import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import './App.css';
 import Home from './Components/Home/Home';
 import Detail from './Components/Detail/Detail';
-import { AuthContextProvider } from './Context/AuthContext';
+
 import SignUp from './Components/Auth/SignUp';
 import SignIn from './Components/Auth/SignIn';
 import ProtectRouteAccount from './Context/ProtectRouteAccount';
@@ -13,7 +13,7 @@ import Account from './Components/Auth/Account';
 function App() {
   
   return (
-    <AuthContextProvider>
+    
       <BrowserRouter>
         <Routes>
           <Route path="/" Component={Home} />
@@ -67,7 +67,6 @@ function App() {
           />
         </Routes>
       </BrowserRouter>
-    </AuthContextProvider>
   );
 }
 

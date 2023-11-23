@@ -25,10 +25,10 @@ function Home() {
       <ContentCarousel result={result} />
       <div className="container">
         <NowPlaying result={'movie/now_playing'} />
-        <NowPlaying result={'tv/airing_today'} />
+        {/* <NowPlaying result={'tv/airing_today'} /> */}
         <TrendingPersons />
         <TopRated result={'movie'} />
-        <TopRated result={'tv'} />
+        {/* <TopRated result={'tv'} /> */}
         <hr className="mt-5" style={{ borderTop: '1px solid #5a606b' }} />
         <div className="row mt-3">
           <div className="col-md-8 col-sm-6" style={{ color: '#5a606b' }}>

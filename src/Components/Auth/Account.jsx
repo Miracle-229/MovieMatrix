@@ -1,46 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { UserAuth } from '../../Context/AuthContext.js';
-import { db } from '../../API/Firebase.js';
-import { doc, updateDoc } from 'firebase/firestore';
 import { BsBookmarkFill } from 'react-icons/bs';
 import { NavLink } from 'react-router-dom';
 import Header from '../Header/Header.jsx';
 import style from './Style.module.scss';
-import { onSnapshot } from 'firebase/firestore';
 import back from '../../Img/back.jpg';
 
 const Account = (props) => {
   const { result } = props;
-  console.log(props);
   const [movies, setMovies] = useState([]);
-  const { user } = UserAuth();
+  const local = localStorage.getItem('user');
 
-  useEffect(() => {
-    onSnapshot(doc(db, 'users', `${user?.email}`), (doc) => {
-      setMovies(doc.data()?.[result]);
-    });
-  }, [user?.email]);
-
-  // const sortedMovies = [...movies].sort((a, b) => {
-  //   if (a.type === 'tv') {
-  //     return a.name.localeCompare(b.name);
-  //   } else {
-  //     return a.title.localeCompare(b.title);
-  //   }
-  // });
-
-  const movieRef = doc(db, 'users', `${user?.email}`);
-
-  const deleteShow = async (id) => {
-    try {
-      const updateMovies = movies.filter((item) => item.id !== id);
-      await updateDoc(movieRef, {
-        [result]: updateMovies,
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const user = JSON.parse(local);
 
   const movieList = movies ? (
     movies.map((item, index) => {
@@ -70,10 +41,7 @@ const Account = (props) => {
                 : item.title}
             </p>
             <p style={{ margin: '0px' }}>
-              <BsBookmarkFill
-                onClick={() => deleteShow(item.id)}
-                style={{ cursor: 'pointer' }}
-              />
+              <BsBookmarkFill style={{ cursor: 'pointer' }} />
             </p>
           </div>
         </div>

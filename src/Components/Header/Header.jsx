@@ -17,7 +17,11 @@ const Header = () => {
   const [options, setOptions] = useState([]);
   const navigate = useNavigate();
   const setTypeaheadRef = useRef();
-  const { user, logOut } = UserAuth();
+  const { logOut } = UserAuth();
+
+  const acces =localStorage.getItem('accessToken')
+  const user = localStorage.getItem('user');
+
 
   const loadMovies = async (query) => {
     await loadOptions(query, setOptions);
@@ -33,15 +37,9 @@ const Header = () => {
   };
 
   const onChange = (selectedOption) => {
+    console.log(selectedOption);
     setInputValue(selectedOption[0]?.label || '');
-    if (selectedOption[0]?.value) {
-      if (selectedOption[0]?.type === 'movie') {
-        navigate(`/movie/${selectedOption[0].value}`);
-      } else if (selectedOption[0]?.type === 'tv') {
-        navigate(`/tv/${selectedOption[0].value}`);
-      }
-      setTypeaheadRef.current.clear();
-    }
+    navigate(`/movie/${selectedOption[0].value}`);
   };
   const renderOption = ({ label, posterPath, rating, year, type }) => (
     <div className="render-option" onClick={() => window.scrollTo(0, 0)}>
@@ -59,7 +57,8 @@ const Header = () => {
             {year ? year.slice(0, 4) : ''}
           </span>{' '}
           <span style={{ color: '#5A606B', padding: '3px 5px' }}>
-            {type === 'movie' ? 'фильм' : 'сериал'}
+            {/* {type === 'movie' ? 'фильм' : 'сериал'} */}
+            фильм
           </span>
           <span
             style={{
@@ -119,7 +118,7 @@ const Header = () => {
               Фильмы
             </NavLink>
           </NavDropdown.Item>
-          <NavDropdown.Item href="#action4">
+          {/* <NavDropdown.Item href="#action4">
             <NavLink
               style={{ color: 'gray', fontWeight: 'bold' }}
               onClick={() => window.scrollTo(0, 0)}
@@ -127,7 +126,7 @@ const Header = () => {
             >
               Сериалы
             </NavLink>
-          </NavDropdown.Item>
+          </NavDropdown.Item> */}
         </NavDropdown>
         {user ? (
           <NavDropdown
@@ -143,7 +142,7 @@ const Header = () => {
                 <BiCameraMovie style={{ marginBottom: '3px' }} /> Фильмы
               </NavLink>
             </NavDropdown.Item>
-            <NavDropdown.Item>
+            {/* <NavDropdown.Item>
               <NavLink
                 style={{ color: 'gray' }}
                 onClick={() => window.scrollTo(0, 0)}
@@ -151,7 +150,7 @@ const Header = () => {
               >
                 <BiCameraMovie style={{ marginBottom: '3px' }} /> Сериалы
               </NavLink>
-            </NavDropdown.Item>
+            </NavDropdown.Item> */}
             <NavDropdown.Item href="#action4">
               <NavLink
                 style={{ color: 'gray' }}
